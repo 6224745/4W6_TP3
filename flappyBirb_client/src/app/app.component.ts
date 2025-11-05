@@ -15,6 +15,8 @@ export class AppComponent {
 
   logout(){
 
+    localStorage.removeItem("token");
+    console.log("Déconnexion réussie ! 🥳")
     // ██ Supprimer le token juste ici ! ██
 
     let darkScreen : HTMLElement | null = document.querySelector("#darkScreen2");
