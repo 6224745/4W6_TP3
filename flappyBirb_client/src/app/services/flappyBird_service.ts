@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
+import { Score } from '../models/score';
 
 const domain = "https://localhost:7038/";
 
@@ -36,5 +37,11 @@ export class FlappyBirdService {
 
     // 🔑 Très important de stocker le token quelque part pour pouvoir l'utiliser dans les futures requêtes !
     localStorage.setItem("token", x.token);
+  }
+
+  async postScore(score : Score) : Promise<Score>{
+    let x = await lastValueFrom(this.http.post<Score>(domain + "api/Scores/PostScore", score));
+    console.log(x);
+    return x;
   }
 }

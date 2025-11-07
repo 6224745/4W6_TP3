@@ -10,7 +10,7 @@ using flappyBirb_serveur.Models;
 
 namespace flappyBirb_serveur.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class ScoresController : ControllerBase
     {
@@ -23,14 +23,14 @@ namespace flappyBirb_serveur.Controllers
 
         // GET: api/Scores
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Score>>> GetScore()
+        public async Task<ActionResult<IEnumerable<Score>>> GetPublicsScores()
         {
             return await _context.Score.ToListAsync();
         }
 
         // GET: api/Scores/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Score>> GetScore(int id)
+        [HttpGet]
+        public async Task<ActionResult<Score>> GetMyScores(int id)
         {
             var score = await _context.Score.FindAsync(id);
 
@@ -45,7 +45,7 @@ namespace flappyBirb_serveur.Controllers
         // PUT: api/Scores/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutScore(int id, Score score)
+        public async Task<IActionResult> ChangeScoreVisibility(int id, Score score)
         {
             if (id != score.Id)
             {
@@ -78,26 +78,19 @@ namespace flappyBirb_serveur.Controllers
         [HttpPost]
         public async Task<ActionResult<Score>> PostScore(Score score)
         {
-            _context.Score.Add(score);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetScore", new { id = score.Id }, score);
-        }
-
-        // DELETE: api/Scores/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteScore(int id)
-        {
-            var score = await _context.Score.FindAsync(id);
-            if (score == null)
+            Score newScore = new Score()
             {
-                return NotFound();
-            }
-
-            _context.Score.Remove(score);
+                Id = score.Id,
+                Pseudo = score.Pseudo,
+                ScoreValue = score.ScoreValue,
+                TimeInSeconds = score.TimeInSeconds,
+                Date = DateTime.Now.ToString(),
+                IsPublic = score.IsPublic
+            };
+            _context.Score.Add(newScore);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return newScore;
         }
 
         private bool ScoreExists(int id)
