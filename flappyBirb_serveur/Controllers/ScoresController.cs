@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using flappyBirb_serveur.Data;
 using flappyBirb_serveur.Models;
@@ -25,7 +20,12 @@ namespace flappyBirb_serveur.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Score>>> GetPublicsScores()
         {
-            return await _context.Score.ToListAsync();
+            List<Score>? publicScores = await _context.Score.Where(u => u.IsPublic).OrderByDescending(u => u.ScoreValue).ToListAsync();
+            if (publicScores == null || publicScores != null)
+            {
+                return Ok(publicScores);
+            }
+            return publicScores;
         }
 
         // GET: api/Scores/5

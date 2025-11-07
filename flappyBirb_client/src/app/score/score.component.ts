@@ -3,6 +3,7 @@ import { Score } from '../models/score';
 import { MaterialModule } from '../material.module';
 import { CommonModule } from '@angular/common';
 import { Round00Pipe } from '../pipes/round-00.pipe';
+import { FlappyBirdService } from '../services/flappyBird_service';
 
 @Component({
   selector: 'app-score',
@@ -16,12 +17,10 @@ export class ScoreComponent {
   myScores : Score[] = [];
   publicScores : Score[] = [];
 
-  constructor() { }
+  constructor(public flappyService : FlappyBirdService) { }
 
   async ngOnInit() {
-
-
-
+    this.publicScores = await this.flappyService.getPublicScores();
   }
 
   async changeScoreVisibility(score : Score){

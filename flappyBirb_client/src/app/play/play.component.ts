@@ -51,7 +51,7 @@ export class PlayComponent implements OnInit{
       let convertedScore = JSON.parse(scoreJSON);
       let convertedTemps = JSON.parse(tempsJSON);
 
-      let newScore = new Score(0, null, null, convertedTemps, convertedScore, false)
+      let newScore = new Score(0, null, null, convertedTemps, convertedScore, true)
       this.flappyService.postScore(newScore);
     }
 

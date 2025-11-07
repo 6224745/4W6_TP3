@@ -44,4 +44,10 @@ export class FlappyBirdService {
     console.log(x);
     return x;
   }
+
+  async getPublicScores() : Promise<Score[]>{
+    let x = lastValueFrom(this.http.get<Score[]>(domain + "api/Scores/GetPublicsScores"));
+    console.log(x);
+    return x;
+  }
 }
