@@ -1,6 +1,7 @@
 ﻿using flappyBirb_serveur.Data;
 using flappyBirb_serveur.Models;
 using flappyBirb_serveur.Models.DTO;
+using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -49,32 +50,35 @@ namespace flappyBirb_serveur.Controllers
         // PUT: api/Scores/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> ChangeScoreVisibility(int id, Score score)
+        public async Task<IActionResult> ChangeScoreVisibility(int id)
         {
-            if (id != score.Id)
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest();
+                return Unauthorized(new { Message = "Utilisateur non authentifié" });
             }
 
-            _context.Entry(score).State = EntityState.Modified;
+            User? user = await _context.Users.FindAsync(userId);
 
-            try
+            if (user == null)
             {
+                return NotFound(new { Message = "Utilisateur non trouvé" });
+            }
+
+            Score? score = await _context.Score.FindAsync(id);
+            if (score == null || score.UserId != userId)
+            {
+                return Unauthorized();
+            }
+
+
+            if (score != null)
+            {
+                score.IsPublic = !score.IsPublic;
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ScoreExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(score);
         }
 
         // POST: api/Scores

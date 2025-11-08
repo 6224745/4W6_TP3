@@ -25,8 +25,8 @@ export class ScoreComponent {
   }
 
   async changeScoreVisibility(score : Score){
-
-
+    await this.flappyService.changeScoreVisibility(score);
+    this.ngOnInit();
   }
 
 }

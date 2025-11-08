@@ -62,4 +62,11 @@ export class FlappyBirdService {
     console.log(x);
     return x;
   }
+
+  async changeScoreVisibility(score : Score)
+  {
+    let x = lastValueFrom(this.http.put<any>(domain + "api/Scores/ChangeScoreVisibility/" + score.id, score));
+    console.log(x);
+    return x;
+  }
 }
