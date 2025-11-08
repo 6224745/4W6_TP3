@@ -1,45 +1,49 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using flappyBirb_serveur.Data;
+﻿using flappyBirb_serveur.Data;
 using flappyBirb_serveur.Models;
+using flappyBirb_serveur.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace flappyBirb_serveur.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [Authorize]
     public class ScoresController : ControllerBase
     {
         private readonly flappyBirb_serveurContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public ScoresController(flappyBirb_serveurContext context)
+        public ScoresController(flappyBirb_serveurContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/Scores
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Score>>> GetPublicsScores()
-        {
-            List<Score>? publicScores = await _context.Score.Where(u => u.IsPublic).OrderByDescending(u => u.ScoreValue).ToListAsync();
-            if (publicScores == null || publicScores != null)
-            {
-                return Ok(publicScores);
-            }
-            return publicScores;
+        { 
+            return await _context.Score.Where(u => u.IsPublic).OrderByDescending(u => u.ScoreValue).Take(10).ToListAsync();
         }
 
         // GET: api/Scores/5
         [HttpGet]
-        public async Task<ActionResult<Score>> GetMyScores(int id)
+        public async Task<ActionResult<IEnumerable<Score>>> GetMyScores()
         {
-            var score = await _context.Score.FindAsync(id);
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (score == null)
+            if (string.IsNullOrEmpty(userId))
             {
-                return NotFound();
+                return Unauthorized(new { Message = "Utilisateur non authentifié" });
             }
+            var scoreList = await _context.Score.Where(s => s.UserId == userId).OrderByDescending(s => s.ScoreValue).ToListAsync();
 
-            return score;
+            return scoreList;
         }
 
         // PUT: api/Scores/5
@@ -76,21 +80,36 @@ namespace flappyBirb_serveur.Controllers
         // POST: api/Scores
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Score>> PostScore(Score score)
+        public async Task<ActionResult<Score>> PostScore(ScoreDTO score)
         {
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { Message = "Utilisateur non authentifié" });
+            }
+
+            User? user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound(new { Message = "Utilisateur non trouvé" });
+            }
+
             Score newScore = new Score()
             {
-                Id = score.Id,
-                Pseudo = score.Pseudo,
+                Pseudo = user.UserName,
                 ScoreValue = score.ScoreValue,
                 TimeInSeconds = score.TimeInSeconds,
                 Date = DateTime.Now.ToString(),
-                IsPublic = score.IsPublic
+                IsPublic = score.IsPublic,
+                UserId = userId
             };
+
             _context.Score.Add(newScore);
             await _context.SaveChangesAsync();
 
-            return newScore;
+            return Ok(newScore);
         }
 
         private bool ScoreExists(int id)

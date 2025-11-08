@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { Score } from '../models/score';
@@ -11,6 +11,7 @@ const domain = "https://localhost:7038/";
 export class FlappyBirdService {
 
   constructor(private http: HttpClient) { }
+  
 
   async register(user : string, mail : string, pass : string, passCon : string) : Promise<void> {
 
@@ -39,14 +40,39 @@ export class FlappyBirdService {
     localStorage.setItem("token", x.token);
   }
 
-  async postScore(score : Score) : Promise<Score>{
-    let x = await lastValueFrom(this.http.post<Score>(domain + "api/Scores/PostScore", score));
+  async postScore(time : number, score : number) : Promise<Score>{
+    let token = localStorage.getItem("token")
+    let httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      })
+    };
+    let scoreDTO = {
+      timeInSeconds: time,
+      scoreValue: score,
+      isPublic: true
+    }
+    let x = await lastValueFrom(this.http.post<Score>(domain + "api/Scores/PostScore", scoreDTO, httpOptions));
     console.log(x);
     return x;
   }
 
   async getPublicScores() : Promise<Score[]>{
     let x = lastValueFrom(this.http.get<Score[]>(domain + "api/Scores/GetPublicsScores"));
+    console.log(x);
+    return x;
+  }
+
+  async getMyScores() : Promise<Score[]>{
+    let token = localStorage.getItem("token")
+    let httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      })
+    };
+    let x = lastValueFrom(this.http.get<Score[]>(domain + "api/Scores/GetMyScores", httpOptions));
     console.log(x);
     return x;
   }

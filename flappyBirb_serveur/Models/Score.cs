@@ -1,4 +1,6 @@
-﻿namespace flappyBirb_serveur.Models
+﻿using System.Text.Json.Serialization;
+
+namespace flappyBirb_serveur.Models
 {
     public class Score
     {
@@ -8,5 +10,8 @@
         public float TimeInSeconds { get; set; }
         public int ScoreValue { get; set; }
         public bool IsPublic { get; set; }
+        public string? UserId { get; set; }
+        [JsonIgnore]
+        public virtual User User { get; set; } = null!;
     }
 }
