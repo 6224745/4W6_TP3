@@ -16,7 +16,7 @@ export class FlappyBirdService {
   async register(user : string, mail : string, pass : string, passCon : string) : Promise<void> {
 
     let registerDTO = {
-        username : user, 
+        username : user,
         email : mail, 
         password : pass, 
         passwordConfirm : passCon
@@ -41,19 +41,12 @@ export class FlappyBirdService {
   }
 
   async postScore(time : number, score : number) : Promise<Score>{
-    let token = localStorage.getItem("token")
-    let httpOptions = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    };
     let scoreDTO = {
       timeInSeconds: time,
       scoreValue: score,
       isPublic: true
     }
-    let x = await lastValueFrom(this.http.post<Score>(domain + "api/Scores/PostScore", scoreDTO, httpOptions));
+    let x = await lastValueFrom(this.http.post<Score>(domain + "api/Scores/PostScore", scoreDTO));
     console.log(x);
     return x;
   }
@@ -65,14 +58,7 @@ export class FlappyBirdService {
   }
 
   async getMyScores() : Promise<Score[]>{
-    let token = localStorage.getItem("token")
-    let httpOptions = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      })
-    };
-    let x = lastValueFrom(this.http.get<Score[]>(domain + "api/Scores/GetMyScores", httpOptions));
+    let x = lastValueFrom(this.http.get<Score[]>(domain + "api/Scores/GetMyScores"));
     console.log(x);
     return x;
   }
