@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using flappyBirb_serveur.Data;
 using flappyBirb_serveur.Models;
+using flappyBirb_serveur.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +60,8 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin();
     });
 });
+
+builder.Services.AddScoped<FlappyBirdService>();
 
 var app = builder.Build();
 

@@ -1,6 +1,7 @@
 ﻿using flappyBirb_serveur.Data;
 using flappyBirb_serveur.Models;
 using flappyBirb_serveur.Models.DTO;
+using flappyBirb_serveur.Services;
 using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,26 +16,26 @@ namespace flappyBirb_serveur.Controllers
     [Authorize]
     public class ScoresController : ControllerBase
     {
-        private readonly flappyBirb_serveurContext _context;
+        private readonly FlappyBirdService _flappybirdService;
         private readonly UserManager<User> _userManager;
 
-        public ScoresController(flappyBirb_serveurContext context, UserManager<User> userManager)
+        public ScoresController(FlappyBirdService flappybirdService, UserManager<User> userManager)
         {
-            _context = context;
+            _flappybirdService = flappybirdService;
             _userManager = userManager;
         }
 
         // GET: api/Scores
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<Score>>> GetPublicsScores()
+        public async Task<ActionResult<IEnumerable<Score>>?> GetPublicsScores()
         { 
-            return await _context.Score.Where(u => u.IsPublic).OrderByDescending(u => u.ScoreValue).Take(10).ToListAsync();
+            return await _flappybirdService.GetPublicsScores();
         }
 
         // GET: api/Scores/5
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Score>>> GetMyScores()
+        public async Task<ActionResult<IEnumerable<Score>>?> GetMyScores()
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -42,9 +43,8 @@ namespace flappyBirb_serveur.Controllers
             {
                 return Unauthorized(new { Message = "Utilisateur non authentifié" });
             }
-            var scoreList = await _context.Score.Where(s => s.UserId == userId).OrderByDescending(s => s.ScoreValue).ToListAsync();
 
-            return scoreList;
+            return await _flappybirdService.GetMyScores(userId);
         }
 
         // PUT: api/Scores/5
@@ -59,14 +59,14 @@ namespace flappyBirb_serveur.Controllers
                 return Unauthorized(new { Message = "Utilisateur non authentifié" });
             }
 
-            User? user = await _context.Users.FindAsync(userId);
+            User? user = await _flappybirdService.GetUserById(userId);
 
             if (user == null)
             {
                 return NotFound(new { Message = "Utilisateur non trouvé" });
             }
 
-            Score? score = await _context.Score.FindAsync(id);
+            Score? score = await _flappybirdService.GetScoreById(id);
             if (score == null || score.UserId != userId)
             {
                 return Unauthorized();
@@ -75,8 +75,7 @@ namespace flappyBirb_serveur.Controllers
 
             if (score != null)
             {
-                score.IsPublic = !score.IsPublic;
-                await _context.SaveChangesAsync();
+                await _flappybirdService.ChangeScoreVisibility(score);
             }
             return Ok(score);
         }
@@ -84,7 +83,7 @@ namespace flappyBirb_serveur.Controllers
         // POST: api/Scores
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Score>> PostScore(ScoreDTO score)
+        public async Task<ActionResult<Score?>> PostScore(ScoreDTO score)
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -93,7 +92,7 @@ namespace flappyBirb_serveur.Controllers
                 return Unauthorized(new { Message = "Utilisateur non authentifié" });
             }
 
-            User? user = await _context.Users.FindAsync(userId);
+            User? user = await _flappybirdService.GetUserById(userId);
 
             if (user == null)
             {
@@ -110,15 +109,7 @@ namespace flappyBirb_serveur.Controllers
                 UserId = userId
             };
 
-            _context.Score.Add(newScore);
-            await _context.SaveChangesAsync();
-
-            return Ok(newScore);
-        }
-
-        private bool ScoreExists(int id)
-        {
-            return _context.Score.Any(e => e.Id == id);
+            return await _flappybirdService.CreateScore(newScore);
         }
     }
 }
